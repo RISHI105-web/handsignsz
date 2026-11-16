@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Language AI Translator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">Sign Language Translator</div>
+            <ul class="nav-links">
+                <li><a href="#translate" onclick="switchTab('translate')">Translate</a></li>
+                <li><a href="#train" onclick="switchTab('train')">Train Model</a></li>
+                <li><a href="#settings" onclick="switchTab('settings')">Settings</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Translate Tab -->
+        <div id="translate" class="tab-content active">
+            <div class="card">
+                <h2>Sign Language Translator</h2>
+                
+                <div class="mode-selector">
+                    <button class="mode-btn active" onclick="selectMode('text-to-sign')">
+                        Text to Sign
+                    </button>
+                    <button class="mode-btn" onclick="selectMode('speech-to-sign')">
+                        Speech to Sign
+                    </button>
+                    <button class="mode-btn" onclick="selectMode('sign-to-text')">
+                        Sign to Text
+                    </button>
+                    <button class="mode-btn" onclick="selectMode('sign-to-speech')">
+                        Sign to Speech
+                    </button>
+                </div>
+
+                <!-- Text to Sign -->
+                <div id="text-to-sign" class="mode-content active">
+                    <div class="input-group">
+                        <label>Enter text to convert to sign:</label>
+                        <textarea id="textInput" placeholder="Type here..."></textarea>
+                        <button class="btn btn-primary" onclick="textToSign()">Convert to Sign</button>
+                    </div>
+                    <div id="signOutput" class="output-box">
+                        <p>Sign output will appear here</p>
+                    </div>
+                </div>
+
+                <!-- Speech to Sign -->
+                <div id="speech-to-sign" class="mode-content">
+                    <div class="input-group">
+                        <label>Speak to convert to sign:</label>
+                        <button class="btn btn-primary" id="recordBtn" onclick="toggleSpeechRecording()">
+                            Start Recording
+                        </button>
+                        <div id="recordingStatus" style="margin-top: 10px;"></div>
+                    </div>
+                    <div id="speechOutput" class="output-box">
+                        <p>Recognized text will appear here</p>
+                    </div>
+                </div>
+
+                <!-- Sign to Text -->
+                <div id="sign-to-text" class="mode-content">
+                    <div class="input-group">
+                        <label>Capture sign language:</label>
+                        <div id="videoContainer" style="display: none;">
+                            <video id="cameraFeed" autoplay playsinline></video>
+                            <canvas id="canvasOutput" style="display: none;"></canvas>
+                        </div>
+                        <button class="btn btn-primary" onclick="toggleCamera()">Start Camera</button>
+                        <button class="btn btn-success" onclick="predictSign()">Predict Sign</button>
+                    </div>
+                    <div id="textOutput" class="output-box">
+                        <p>Predicted text will appear here</p>
+                    </div>
+                </div>
+
+                <!-- Sign to Speech -->
+                <div id="sign-to-speech" class="mode-content">
+                    <div class="input-group">
+                        <label>Capture sign and hear text:</label>
+                        <div id="videoContainer2" style="display: none;">
+                            <video id="cameraFeed2" autoplay playsinline></video>
+                            <canvas id="canvasOutput2" style="display: none;"></canvas>
+                        </div>
+                        <button class="btn btn-primary" onclick="toggleCamera2()">Start Camera</button>
+                        <button class="btn btn-success" onclick="predictSignToSpeech()">Predict and Speak</button>
+                    </div>
+                    <div id="speechOutputBox" class="output-box">
+                        <p>Audio output will be played here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Train Tab -->
+        <div id="train" class="tab-content">
+            <div class="card">
+                <h2>Train Custom Model</h2>
+                
+                <div class="training-section">
+                    <h3>Step 1: Build Model</h3>
+                    <div class="input-group">
+                        <label>Number of classes (signs):</label>
+                        <input type="number" id="numClasses" value="26" min="1" max="100">
+                        <button class="btn btn-primary" onclick="buildModel()">Build Model</button>
+                    </div>
+                </div>
+
+                <div class="training-section">
+                    <h3>Step 2: Collect Training Data</h3>
+                    <div class="input-group">
+                        <label>Sign Label (e.g., 'A', 'B', 'Hello'):</label>
+                        <input type="text" id="signLabel" placeholder="Enter sign name">
+                        <div id="videoContainer3" style="display: none;">
+                            <video id="cameraFeed3" autoplay playsinline></video>
+                            <canvas id="canvasOutput3" style="display: none;"></canvas>
+                        </div>
+                        <button class="btn btn-info" onclick="toggleTrainingCamera()">Start Camera</button>
+                        <button class="btn btn-success" onclick="startRecording()">Start Recording</button>
+                        <button class="btn btn-warning" onclick="stopRecording()">Stop Recording</button>
+                        <div id="recordingInfo" style="margin-top: 10px;"></div>
+                    </div>
+                </div>
+
+                <div class="training-section">
+                    <h3>Step 3: Train Model</h3>
+                    <div class="input-group">
+                        <label>Epochs:</label>
+                        <input type="number" id="epochs" value="50" min="1" max="500">
+                        <button class="btn btn-primary" onclick="trainModel()">Start Training</button>
+                    </div>
+                    <div id="trainingProgress" style="margin-top: 20px;"></div>
+                </div>
+
+                <div class="training-section">
+                    <h3>Training Data Summary</h3>
+                    <div id="trainingDataSummary" class="info-box">
+                        <p>No training data yet. Start by collecting samples.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="card">
+                <h2>Settings</h2>
+                
+                <div class="setting-section">
+                    <h3>Model Settings</h3>
+                    <div class="setting-item">
+                        <label>Current Model Status:</label>
+                        <div id="modelStatus">Checking...</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="loadModel()">Load Model</button>
+                    <button class="btn btn-secondary" onclick="resetModel()">Reset Model</button>
+                </div>
+
+                <div class="setting-section">
+                    <h3>Audio Settings</h3>
+                    <div class="setting-item">
+                        <label>Speech Rate:</label>
+                        <input type="range" id="speechRate" min="50" max="300" value="150">
+                        <span id="speechRateValue">150</span>
+                    </div>
+                </div>
+
+                <div class="setting-section">
+                    <h3>Application Info</h3>
+                    <div class="info-box">
+                        <p><strong>Version:</strong> 1.0.0</p>
+                        <p><strong>Backend:</strong> Flask + Random Forest + MediaPipe</p>
+                        <p><strong>Frontend:</strong> HTML5 + JavaScript</p>
+                        <p><strong>Model Type:</strong> Random Forest Classifier (hand landmark positions)</p>
+                        <p><strong>Features:</strong> Text/Speech to Sign, Sign Recognition, Fast Model Training</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Sign Language Translator - Powered by Random Forest & MediaPipe</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
